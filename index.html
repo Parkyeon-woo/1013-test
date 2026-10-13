@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TOEIC VOCA MASTER | 토익 고득점 영단어 암기 앱</title>
+  <meta name="description" content="토익 600, 750, 900+ 목표 점수별 필수 기출 어휘를 플래시카드, 퀴즈, 타이핑으로 완벽 마스터하는 스마트 토익 영단어 암기 웹앱">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Pretendard:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body data-theme="dark">
+  <!-- 배경 데코레이션 그라디언트 블러 -->
+  <div class="ambient-glow glow-1"></div>
+  <div class="ambient-glow glow-2"></div>
+  <div class="ambient-glow glow-3"></div>
+
+  <!-- 메인 래퍼 -->
+  <div id="app" class="app-container">
+    <!-- 헤더 -->
+    <header class="navbar">
+      <div class="logo-area">
+        <div class="logo-badge">
+          <span class="logo-icon">⚡</span>
+        </div>
+        <div class="brand-text">
+          <h1>TOEIC <span class="gradient-text">VOCA</span></h1>
+          <span class="sub-label">TARGET 990 MASTER</span>
+        </div>
+      </div>
+
+      <!-- 상단 스탯 대시보드 -->
+      <div class="top-stats">
+        <div class="stat-pill" title="연속 학습 일수">
+          <span class="stat-icon">🔥</span>
+          <span class="stat-num" id="statStreak">1</span>일 연속
+        </div>
+        <div class="stat-pill" title="오늘 학습한 단어">
+          <span class="stat-icon">🎯</span>
+          <span class="stat-num" id="statToday">0</span>개 완료
+        </div>
+        <div class="stat-pill xp-pill" title="누적 경험치 & 레벨">
+          <span class="stat-icon">👑</span>
+          <span class="stat-num" id="statLevel">Lv.1 초심자</span>
+          <div class="xp-mini-bar">
+            <div class="xp-fill" id="statXpBar" style="width: 20%;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 우측 컨트롤 버튼들 -->
+      <div class="nav-controls">
+        <button id="soundToggleBtn" class="icon-btn" title="효과음 켜기/끄기" aria-label="효과음">
+          <span id="soundIcon">🔊</span>
+        </button>
+        <button id="themeToggleBtn" class="icon-btn" title="다크/라이트 모드" aria-label="테마 전환">
+          <span id="themeIcon">🌙</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- 필터 & 컨트롤 바 -->
+    <section class="control-panel">
+      <!-- 난이도 탭 선택기 -->
+      <div class="level-tabs" role="tablist">
+        <button class="level-tab active" data-level="all">전체 빈출 (100)</button>
+        <button class="level-tab" data-level="600">600+ 입문</button>
+        <button class="level-tab" data-level="750">750+ 중급</button>
+        <button class="level-tab" data-level="850">850+ 상급</button>
+        <button class="level-tab" data-level="900">900+ 실전만점</button>
+        <button class="level-tab bookmark-tab" data-level="bookmark">★ 즐겨찾기 (<span id="bookmarkCount">0</span>)</button>
+        <button class="level-tab review-tab" data-level="review">🚨 오답노트 (<span id="reviewCount">0</span>)</button>
+      </div>
+
+      <!-- 검색창 및 액션 버튼 -->
+      <div class="search-and-actions">
+        <div class="search-box">
+          <span class="search-icon">🔍</span>
+          <input type="text" id="searchInput" placeholder="단어, 뜻, 카테고리 검색..." autocomplete="off">
+          <button id="searchClearBtn" class="clear-btn" style="display: none;">✕</button>
+        </div>
+        <button id="addWordModalBtn" class="action-btn primary-btn">
+          <span>+ 단어 추가</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- 메인 학습 네비게이션 탭 -->
+    <nav class="study-nav">
+      <button class="study-nav-btn active" data-mode="flashcards">
+        <span class="tab-icon">🗂️</span> 플래시카드
+      </button>
+      <button class="study-nav-btn" data-mode="quiz">
+        <span class="tab-icon">🎯</span> 4지선다 퀴즈
+      </button>
+      <button class="study-nav-btn" data-mode="typing">
+        <span class="tab-icon">✍️</span> 타이핑 훈련
+      </button>
+      <button class="study-nav-btn" data-mode="list">
+        <span class="tab-icon">📋</span> 단어장 목록
+      </button>
+    </nav>
+
+    <!-- 메인 컨텐츠 영역 -->
+    <main class="main-content">
+      <!-- 1. 플래시카드 모드 -->
+      <div id="flashcardsView" class="view-panel active">
+        <!-- 플래시카드 상단 프로그레스 & 보조 툴 -->
+        <div class="study-header">
+          <div class="progress-wrap">
+            <span class="progress-text"><span id="cardCurrentIdx">1</span> / <span id="cardTotalCount">100</span></span>
+            <div class="progress-bar">
+              <div class="progress-fill" id="cardProgressFill" style="width: 1%;"></div>
+            </div>
+          </div>
+          <div class="card-tools">
+            <button id="ttsPlayBtn" class="tool-btn" title="영어 발음 듣기 (단축키 S)">
+              <span>🔊 발음</span>
+            </button>
+            <button id="autoPlayBtn" class="tool-btn" title="자동 재생 모드">
+              <span id="autoPlayIcon">▶</span> <span id="autoPlayText">자동재생</span>
+            </button>
+            <button id="cardShuffleBtn" class="tool-btn" title="단어 섞기">
+              <span>🔀 셔플</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- 3D 플립 카드 컨테이너 -->
+        <div class="card-scene">
+          <div class="flashcard" id="flashcard" role="button" tabindex="0" title="클릭하거나 스페이스바를 눌러 뒤집기">
+            <!-- 앞면 -->
+            <div class="card-face card-front">
+              <div class="card-badge-row">
+                <span class="badge-level" id="cardLevel">RC/LC 750</span>
+                <span class="badge-category" id="cardCategory">비즈니스</span>
+                <button class="bookmark-btn" id="cardBookmarkBtn" title="북마크 토글">★</button>
+              </div>
+
+              <div class="card-center">
+                <span class="card-pos" id="cardPos">v.</span>
+                <h2 class="card-word" id="cardWord">accommodate</h2>
+                <p class="card-phonetic" id="cardPhonetic">/əˈkɑː.mə.deɪt/</p>
+              </div>
+
+              <div class="card-footer-front">
+                <span class="flip-hint">클릭 또는 [Space]를 눌러 뜻 확인 🔄</span>
+              </div>
+            </div>
+
+            <!-- 뒷면 -->
+            <div class="card-face card-back">
+              <div class="card-badge-row">
+                <span class="badge-meaning-label">의미 & 실전 예문</span>
+                <button class="bookmark-btn" id="cardBookmarkBtnBack" title="북마크 토글">★</button>
+              </div>
+
+              <div class="back-body">
+                <div class="meaning-box">
+                  <h3 class="card-meaning" id="cardMeaning">(요구·필요 등을) 수용하다, 편의를 도모하다</h3>
+                </div>
+
+                <div class="example-box">
+                  <p class="example-en" id="cardExampleEn">The hotel can accommodate up to 500 guests.</p>
+                  <p class="example-ko" id="cardExampleKo">그 호텔은 최대 500명의 게스트를 수용할 수 있습니다.</p>
+                </div>
+
+                <div class="collocation-box">
+                  <span class="tag-title">💡 토익 연어(Collocation):</span>
+                  <span class="tag-content" id="cardCollocation">accommodate the request</span>
+                </div>
+
+                <div class="synonym-box">
+                  <span class="tag-title">🔄 동의어:</span>
+                  <span class="tag-content" id="cardSynonyms">house, lodge, cater to</span>
+                </div>
+              </div>
+
+              <div class="card-footer-back">
+                <span class="flip-hint">다시 누르면 앞면으로 회전합니다</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 하단 액션 버튼 -->
+        <div class="card-actions">
+          <button id="cardPrevBtn" class="nav-arrow-btn" title="이전 단어">‹ 이전</button>
+          <div class="judge-buttons">
+            <button id="cardReviewBtn" class="judge-btn review" title="아직 헷갈려요 (단축키 ←)">
+              <span class="judge-icon">🚨</span>
+              <span class="judge-label">다시 보기</span>
+            </button>
+            <button id="cardMasterBtn" class="judge-btn master" title="외웠어요! (단축키 →)">
+              <span class="judge-icon">✨</span>
+              <span class="judge-label">외웠음!</span>
+            </button>
+          </div>
+          <button id="cardNextBtn" class="nav-arrow-btn" title="다음 단어">다음 ›</button>
+        </div>
+
+        <div class="keyboard-guide">
+          <span>⌨️ 단축키: <strong>[Space]</strong> 뒤집기 · <strong>[←]</strong> 다시보기 · <strong>[→]</strong> 외움 · <strong>[S]</strong> 발음</span>
+        </div>
+      </div>
+
+      <!-- 2. 4지선다 퀴즈 모드 -->
+      <div id="quizView" class="view-panel">
+        <div class="quiz-container">
+          <div class="quiz-header">
+            <div class="quiz-info-block">
+              <span class="quiz-round-tag">QUESTION <span id="quizCurrentNo">1</span> / <span id="quizTotalNo">10</span></span>
+              <div class="streak-badge" id="quizComboBadge" style="display:none;">
+                🔥 <span id="quizComboCount">2</span> COMBO!
+              </div>
+            </div>
+            <div class="quiz-score-tag">
+              점수: <strong id="quizScoreText">0</strong>점
+            </div>
+          </div>
+
+          <div class="quiz-card">
+            <div class="quiz-word-area">
+              <span class="quiz-pos-badge" id="quizWordPos">v.</span>
+              <h2 class="quiz-question-word" id="quizQuestionWord">accommodate</h2>
+              <button id="quizTtsBtn" class="quiz-audio-btn" title="발음 듣기">🔊</button>
+            </div>
+            <p class="quiz-instruction">알맞은 한국어 의미를 선택하세요.</p>
+
+            <div class="quiz-options-grid" id="quizOptionsGrid">
+              <!-- JS 동적 생성 -->
+            </div>
+
+            <!-- 피드백 & 해설 박스 -->
+            <div class="quiz-feedback-box" id="quizFeedbackBox" style="display:none;">
+              <div class="feedback-title" id="quizFeedbackTitle">정답입니다! 🎉</div>
+              <p class="feedback-example" id="quizFeedbackExample"></p>
+              <button id="quizNextBtn" class="action-btn next-q-btn">다음 문제로 ›</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 퀴즈 결과 모달 영역 -->
+        <div class="quiz-result-card" id="quizResultCard" style="display:none;">
+          <div class="result-trophy">🏆</div>
+          <h2 class="result-title">토익 퀴즈 완료!</h2>
+          <p class="result-score">최종 점수: <span id="finalScoreVal">80</span>점 (<span id="finalCorrectCount">8</span>/<span id="finalTotalCount">10</span>)</p>
+          <p class="result-comment" id="finalComment">훌륭합니다! 실전 토익 900점이 눈앞입니다.</p>
+          <div class="result-actions">
+            <button id="quizRestartBtn" class="action-btn primary-btn">다시 도전하기</button>
+            <button id="quizReviewWrongBtn" class="action-btn secondary-btn">오답만 다시 풀기</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. 타이핑 훈련 모드 -->
+      <div id="typingView" class="view-panel">
+        <div class="typing-container">
+          <div class="typing-header">
+            <span class="typing-step">스펠링 트레이닝 <span id="typingCurrentNo">1</span> / <span id="typingTotalNo">100</span></span>
+            <span class="typing-score">완료: <span id="typingDoneCount">0</span>개</span>
+          </div>
+
+          <div class="typing-card">
+            <div class="typing-prompt">
+              <span class="typing-category" id="typingCategory">비즈니스</span>
+              <h3 class="typing-meaning" id="typingMeaning">(요구·필요 등을) 수용하다, 편의를 도모하다</h3>
+              <p class="typing-sentence" id="typingSentence">
+                The hotel can <span class="blank-target">____________</span> up to 500 guests.
+              </p>
+            </div>
+
+            <div class="typing-input-wrap">
+              <input type="text" id="typingInput" placeholder="단어 철자를 입력하고 Enter를 누르세요" autocomplete="off" spellcheck="false">
+              <button id="typingSubmitBtn" class="action-btn primary-btn">확인</button>
+            </div>
+
+            <div class="typing-hint-area">
+              <button id="typingHintBtn" class="hint-btn">💡 힌트 보기 (첫 글자 & 길이)</button>
+              <span id="typingHintText" class="hint-text" style="display:none;"></span>
+            </div>
+
+            <div class="typing-feedback" id="typingFeedback" style="display:none;">
+              <span id="typingFeedbackText"></span>
+              <button id="typingNextBtn" class="action-btn secondary-btn">다음 단어 ›</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 4. 단어장 목록 모드 -->
+      <div id="listView" class="view-panel">
+        <div class="list-controls-bar">
+          <div class="list-info">
+            총 <strong id="listWordCount">100</strong>개의 단어 표시 중
+          </div>
+          <div class="list-sort-actions">
+            <select id="listSortSelect" class="styled-select">
+              <option value="id-asc">번호순</option>
+              <option value="alpha-asc">알파벳순 (A-Z)</option>
+              <option value="level-asc">난이도순 (낮은 순)</option>
+              <option value="level-desc">난이도순 (높은 순)</option>
+            </select>
+            <button id="exportDataBtn" class="tool-btn" title="학습 데이터 JSON 내보내기">💾 백업</button>
+            <button id="resetDataBtn" class="tool-btn danger" title="학습 진행도 초기화">🔄 초기화</button>
+          </div>
+        </div>
+
+        <div class="vocab-grid" id="vocabGrid">
+          <!-- JS 동적 생성 -->
+        </div>
+      </div>
+    </main>
+
+    <!-- 사용자 커스텀 단어 추가 모달 -->
+    <div class="modal-overlay" id="addWordModal" style="display: none;">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3>신규 토익 단어 등록</h3>
+          <button id="closeModalBtn" class="modal-close-btn">✕</button>
+        </div>
+        <form id="addWordForm" class="modal-form">
+          <div class="form-row">
+            <div class="form-group flex-2">
+              <label for="newWord">영어 단어 *</label>
+              <input type="text" id="newWord" required placeholder="예: delegate">
+            </div>
+            <div class="form-group flex-1">
+              <label for="newPos">품사 *</label>
+              <select id="newPos">
+                <option value="v.">동사 (v.)</option>
+                <option value="n.">명사 (n.)</option>
+                <option value="adj.">형용사 (adj.)</option>
+                <option value="adv.">부사 (adv.)</option>
+                <option value="prep.">전치사 (prep.)</option>
+                <option value="conj.">접속사 (conj.)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group flex-1">
+              <label for="newPhonetic">발음기호</label>
+              <input type="text" id="newPhonetic" placeholder="/ˈdel.ə.ɡeɪt/">
+            </div>
+            <div class="form-group flex-1">
+              <label for="newLevel">목표 점수대</label>
+              <select id="newLevel">
+                <option value="600">600+ 입문</option>
+                <option value="750" selected>750+ 중급</option>
+                <option value="850">850+ 상급</option>
+                <option value="900">900+ 실전만점</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="newMeaning">한국어 뜻 *</label>
+            <input type="text" id="newMeaning" required placeholder="예: 위임하다; 대표자">
+          </div>
+
+          <div class="form-group">
+            <label for="newExampleEn">영어 예문</label>
+            <textarea id="newExampleEn" rows="2" placeholder="He learned to delegate tasks to team members."></textarea>
+          </div>
+
+          <div class="form-group">
+            <label for="newExampleKo">예문 해석</label>
+            <input type="text" id="newExampleKo" placeholder="그는 팀원들에게 업무를 위임하는 법을 배웠습니다.">
+          </div>
+
+          <div class="form-row">
+            <div class="form-group flex-1">
+              <label for="newCollocation">토익 연어</label>
+              <input type="text" id="newCollocation" placeholder="delegate authority">
+            </div>
+            <div class="form-group flex-1">
+              <label for="newCategory">카테고리</label>
+              <input type="text" id="newCategory" placeholder="경영 및 조직">
+            </div>
+          </div>
+
+          <div class="modal-actions">
+            <button type="button" id="cancelAddBtn" class="action-btn secondary-btn">취소</button>
+            <button type="submit" class="action-btn primary-btn">단어장에 추가</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- 캔버스 컨페티(축하 효과) -->
+    <canvas id="confettiCanvas" class="confetti-canvas"></canvas>
+  </div>
+
+  <!-- 스크립트 연결 -->
+  <script src="words.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
